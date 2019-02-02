@@ -1,0 +1,7 @@
+resolver: lts-13.5
+packages:
+  - '.'
+extra-deps:
+  - DRBG-0.5.5@sha256:3b8040bed356e2b63927a27fb6d5adbd19d70c9e1d1bb66111bbeb33e56900eb
+  - git: https://github.com/bitemyapp/esqueleto.git
+    commit: 0d7b8e80700047f0fac8b3bc7adb2167fe16a243
