@@ -14,7 +14,8 @@ import Test.QuickCheck
 import Control.Exception (evaluate)
 
 import History.TH
-import History.PersistFields
+import History.Types
+import History
 import Database.Persist.TH
 import Database.Persist
 

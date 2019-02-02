@@ -1,14 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
-module History.PersistFields where
+module History where
 
+import Data.Text(Text())
 import Database.Persist.Sql
-import Data.Aeson (ToJSON, FromJSON)
-import Data.Text (Text())
-import Data.Time (UTCTime())
 import GHC.Generics (Generic)
-
 
 data HistoryOptions = HistoryOptions {
   userModelName :: Text
@@ -20,22 +17,6 @@ defaultOptions = HistoryOptions
   "User"
   "UserId"
   SqlInt64
-
-
-newtype Created = Created UTCTime
-  deriving (Show, Read, Eq, Generic, PersistField, PersistFieldSql, Ord)
-instance FromJSON Created
-instance ToJSON Created
-
-newtype Updated = Updated UTCTime
-  deriving (Show, Read, Eq, Generic, PersistField, PersistFieldSql)
-instance FromJSON Updated
-instance ToJSON Updated
-
-newtype Deleted = Deleted Bool
-  deriving (Show, Read, Eq, Generic, PersistField, PersistFieldSql)
-instance FromJSON Deleted
-instance ToJSON Deleted
 
 addHistoryDefs :: HistoryOptions -> [EntityDef] -> [EntityDef]
 addHistoryDefs opts (e:es) = case "history" `elem` (entityAttrs e) of

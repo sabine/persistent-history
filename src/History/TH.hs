@@ -13,7 +13,7 @@ import qualified Language.Haskell.TH as TH
 
 import Control.Monad.IO.Class (liftIO,)
 
-import History.PersistFields
+import History.Types
 
 upperFirst :: Text -> Text
 upperFirst t =

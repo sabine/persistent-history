@@ -9,8 +9,9 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:   History.TH
-                     , History.PersistFields
+  exposed-modules:   History
+                     , History.TH
+                     , History.Types
   hs-source-dirs:    src
   build-depends:     base >=4.8 && <5.0
                      , aeson
@@ -27,7 +28,8 @@ test-suite spec
   main-is: Spec.hs
   hs-source-dirs:      test
                      , src
-  other-modules:     History.PersistFields
+  other-modules:     History
+                     , History.Types
                      , History.TH
                      , History.HistorySpec
   build-depends:       base >=4.8 && <5.0
