@@ -1,5 +1,5 @@
 name:                persistent-history
-version:             0.0.0.1
+version:             0.0.0.2
 synopsis:            (experimental) TH functions to generate revision history models for a persistent schema
 description:         -
 license:             MIT
