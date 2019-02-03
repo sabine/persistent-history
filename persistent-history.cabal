@@ -16,8 +16,6 @@ library
   build-depends:     base >=4.8 && <5.0
                      , aeson
                      , persistent
-                     , persistent-template
-                     , persistent-postgresql
                      , template-haskell
                      , time
                      , text
@@ -38,7 +36,6 @@ test-suite spec
                      , exceptions
                      , persistent
                      , persistent-template
-                     , persistent-postgresql
                      , QuickCheck
                      , template-haskell
                      , time
