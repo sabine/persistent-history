@@ -32,10 +32,10 @@ lowerFirst t =
     Nothing -> t
 
 prefix :: TH.Name -> Text -> TH.Name
-prefix e s = TH.mkName $ Data.Text.unpack s ++ (TH.nameBase e)
+prefix e s = TH.mkName $ Data.Text.unpack s ++ TH.nameBase e
 
 suffix :: TH.Name -> Text -> TH.Name
-suffix e s = TH.mkName $ (TH.nameBase e) ++ Data.Text.unpack s
+suffix e s = TH.mkName $ TH.nameBase e ++ Data.Text.unpack s
 
 entityName = TH.mkName . Data.Text.unpack . unHaskellName .entityHaskell
 
@@ -63,7 +63,7 @@ mkHistoryValF e = TH.funD
   (funName eName "historyVal")
   [TH.clause
     [[p|userKey|], [p|entity|], [p|now|]]
-    (TH.normalB $
+    (TH.normalB
       [e| $historyRecord |])
     []]
   where
@@ -74,7 +74,7 @@ mkHistoryValF e = TH.funD
     
     fields =
       [[e|(entityKey entity)|]]
-      ++ (Prelude.map mkFieldE $ entityFields e)
+      ++ Prelude.map mkFieldE (entityFields e)
       ++ [ mkRecordLookupE eName [e|entity|] "Deleted"
       , [e|(Created now)|]
       , [e|userKey|]
@@ -85,9 +85,9 @@ mkInsertF e = TH.funD
   (funName eName "insert")
   [TH.clause
     [[p|userKey|], [p|record|]]
-    (TH.normalB $
+    (TH.normalB
       [e| do
-        now <- liftIO $ getCurrentTime
+        now <- liftIO getCurrentTime
         P.insert $ record
           (Created now)
           userKey
@@ -103,9 +103,9 @@ mkInsertKeyF e = TH.funD
   (funName eName "insertKey")
   [TH.clause
     [[p|userKey|], [p|key|], [p|record|]]
-    (TH.normalB $
+    (TH.normalB
       [e| do
-        now <- liftIO $ getCurrentTime
+        now <- liftIO getCurrentTime
         P.insertKey key $ record
           (Created now)
           userKey
@@ -121,9 +121,9 @@ mkSelectListF e = TH.funD
   (funName eName "selectList")
   [TH.clause
     [[p|filters|], [p|options|]]
-      (TH.normalB $
+      (TH.normalB
         [e| P.selectList
-          ([$(conNameE eName "Deleted") P.==. Deleted False] ++ filters)
+          (($(conNameE eName "Deleted") P.==. Deleted False) : filters)
           options |])
       []]
   where
@@ -133,9 +133,9 @@ mkSelectFirstF e = TH.funD
   (funName eName "selectFirst")
   [TH.clause
     [[p|filters|], [p|options|]]
-    (TH.normalB $
+    (TH.normalB
       [e| P.selectFirst
-        ([$(conNameE eName "Deleted") P.==. Deleted False] ++ filters)
+        (($(conNameE eName "Deleted") P.==. Deleted False) : filters)
         options |])
     []]
   where
@@ -145,12 +145,12 @@ mkUpdateF e = TH.funD
   (funName eName "update")
   [TH.clause
     [[p|userKey|], [p|entity|], [p|updates|]]
-    (TH.normalB $
+    (TH.normalB
       [e| do
-        now <- liftIO $ getCurrentTime
+        now <- liftIO getCurrentTime
         P.insertKey
           ($(conNameE eName "HistoryKey") (entityKey entity) (Created now))
-          $ ($(funNameE eName "historyVal") userKey entity now)
+          ($(funNameE eName "historyVal") userKey entity now)
         P.update
           (entityKey entity)
           (updates ++ [
@@ -165,10 +165,8 @@ mkDeleteF e = TH.funD
   (funName eName "delete")
   [TH.clause
     [[p|userKey|], [p|entity|]]
-    (TH.normalB $
-      [e| do
-        $(funNameE eName "update") userKey entity [$(conNameE eName "Deleted") P.=. Deleted True]
-      |])
+    (TH.normalB
+      [e| $(funNameE eName "update") userKey entity [$(conNameE eName "Deleted") P.=. Deleted True] |])
     []]
   where
     eName = entityName e
@@ -177,10 +175,10 @@ mkRevertF e = TH.funD
   (funName eName "revert")
   [TH.clause
     [[p|userKey|], [p|historyentity|]]
-    (TH.normalB $
+    (TH.normalB
       [e| do
         entity <- P.getJustEntity ($(varNameE eHistoryName "ModelFk") (entityVal historyentity))
-        $(TH.varE $ prefix eName "update") userKey entity $historyRevertUpdate
+        $(funNameE eName "update") userKey entity $historyRevertUpdate
       |])
     []]
   where
@@ -192,14 +190,14 @@ mkRevertF e = TH.funD
       P.=. $(mkRecordLookupE eHistoryName [e|historyentity|] . entityFieldName $ entityField)|]
     historyRevertUpdates = 
       -- when we revert, the reverted record is automatically undeleted
-      [ [e| $(conNameE eName "Deleted") P.=. Deleted False |] ]
-      ++ (Prelude.map mkUpdateE $ entityFields e)
+      [e| $(conNameE eName "Deleted") P.=. Deleted False |]
+      : Prelude.map mkUpdateE (entityFields e)
     historyRevertUpdate = 
       Prelude.foldl (\ g x -> [e| $x : $g |]) [e|[]|] historyRevertUpdates
   
 mkHistory :: [EntityDef] -> TH.Q [TH.Dec]
-mkHistory (e:es) = case "history" `elem` entityAttrs e of
-  True -> do
+mkHistory (e:es) = if "history" `elem` entityAttrs e then
+  (do
     historyValF <- mkHistoryValF e
     insertF <- mkInsertF e
     insertKeyF <- mkInsertKeyF e
@@ -216,7 +214,6 @@ mkHistory (e:es) = case "history" `elem` entityAttrs e of
       : updateF
       : deleteF
       : revertF
-      : rest
-  False ->
-    mkHistory es
+      : rest)
+  else mkHistory es
 mkHistory [] = return []
