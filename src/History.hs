@@ -56,14 +56,7 @@ addHistoryDefs opts (e:es) = case "history" `elem` (entityAttrs e) of
           []
           True
           (ForeignRef (HaskellName (userModelName opts)) (FTTypeCon Nothing (userKeyTypeName opts)))
-        , FieldDef
-          (HaskellName "deleted")
-          (DBName "deleted")
-          (FTTypeCon Nothing "Deleted")
-          SqlBool
-          []
-          True
-          NoReference
+        , deletedField
       ]}
     historyModelForE = EntityDef
       (HaskellName $ historyEntityName)
@@ -108,7 +101,8 @@ addHistoryDefs opts (e:es) = case "history" `elem` (entityAttrs e) of
           True
           idRef]
         ++ entityFields e
-        ++ [FieldDef
+        ++ [deletedField
+        , FieldDef
           (HaskellName "created")
           (DBName "created")
           (FTTypeCon Nothing "Created")
@@ -135,4 +129,12 @@ addHistoryDefs opts (e:es) = case "history" `elem` (entityAttrs e) of
     idRef = (ForeignRef
             (entityHaskell e)
             idFTTypeCon)
+    deletedField = FieldDef
+          (HaskellName "deleted")
+          (DBName "deleted")
+          (FTTypeCon Nothing "Deleted")
+          SqlBool
+          []
+          True
+          NoReference
 addHistoryDefs _ [] = []
